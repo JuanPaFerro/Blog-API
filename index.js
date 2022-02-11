@@ -3,7 +3,11 @@ const app = express();
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
+const authRoute = require("./routes/auth");
+
 dotenv.config();
+app.use(express.json());
+
 mongoose
   .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -12,9 +16,7 @@ mongoose
   .then(console.log("connected to mongo"))
   .catch((err) => console.log(error));
 
-app.use("/", (req, res) => {
-  console.log("hey");
-});
+app.use("/api/auth", authRoute);
 
 app.listen("5000", () => {
   console.log("running the api");
