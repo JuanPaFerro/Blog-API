@@ -32,7 +32,6 @@ router.delete("/:id", async (req, res) => {
       const user = await User.findById(req.params.id);
       try {
         await Post.deleteMany({ username: user.username });
-
         await User.findByIdAndDelete(req.params.id);
         res.status(200).json("User has been deleted...");
       } catch (error) {
@@ -43,6 +42,16 @@ router.delete("/:id", async (req, res) => {
     }
   } else {
     res.status(401).json("You can only delete your account!");
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    const { password, ...others } = user._doc;
+    res.status(200).json(others);
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 
