@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
+const mongoose = require("mongoose");
 
 //Create New Post
 router.post("/", async (req, res) => {
@@ -60,7 +61,22 @@ router.delete("/:id", async (req, res) => {
 //Get Post
 router.get("/:id", async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(req.params.id) },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+    ])
+      .exec()
+      .then((result) => result);
+
     res.status(200).json(post);
   } catch (err) {
     res.status(500).json(err);
@@ -75,15 +91,52 @@ router.get("/", async (req, res) => {
     let posts;
 
     if (username) {
-      posts = await Post.find({ username });
-    } else if (catName) {
-      posts = await Post.find({
-        categories: {
-          $in: [catName],
+      posts = await Post.aggregate([
+        { $match: { username } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
         },
-      });
+      ])
+        .exec()
+        .then((result) => result);
+    } else if (catName) {
+      posts = await Post.aggregate([
+        {
+          $match: {
+            categories: {
+              $in: [catName],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+      ])
+        .exec()
+        .then((result) => result);
     } else {
-      posts = await Post.find();
+      posts = await Post.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+      ])
+        .exec()
+        .then((result) => result);
     }
     res.status(200).json(posts);
   } catch (err) {

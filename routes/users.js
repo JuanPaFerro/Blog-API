@@ -4,7 +4,7 @@ const Post = require("../models/Post");
 const bcrypt = require("bcrypt");
 
 router.put("/:id", async (req, res) => {
-  if (req.body.userId === req.params.id) {
+  if (req.body._id === req.params.id) {
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.password, salt);
@@ -27,7 +27,7 @@ router.put("/:id", async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
-  if (req.body.userId === req.params.id) {
+  if (req.body._id === req.params.id) {
     try {
       const user = await User.findById(req.params.id);
       try {
@@ -50,6 +50,14 @@ router.get("/:id", async (req, res) => {
     const user = await User.findById(req.params.id);
     const { password, ...others } = user._doc;
     res.status(200).json(others);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
   } catch (err) {
     res.status(500).json(err);
   }
